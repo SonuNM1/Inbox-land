@@ -8,7 +8,9 @@ export async function POST(req) {
   }
 
   const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
       user: senderEmail,
       pass: appPassword,
@@ -22,12 +24,20 @@ export async function POST(req) {
       await transporter.sendMail({
         from: senderEmail,
         to: email,
-        subject: subject,
+        subject,
         text: body,
       });
+
       results.push({ email, status: "sent" });
+
     } catch (err) {
-      results.push({ email, status: "failed", error: err.message });
+
+      results.push({
+        email,
+        status: "failed",
+        error: err.message,
+      });
+
     }
   }
 

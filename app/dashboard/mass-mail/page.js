@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Send, CheckCircle, XCircle, Loader2 } from "lucide-react";
+
 export default function MassMail() {
+
   const [senderEmail, setSenderEmail] = useState("");
   const [appPassword, setAppPassword] = useState("");
   const [recipients, setRecipients] = useState("");
@@ -13,11 +15,13 @@ export default function MassMail() {
   const sentCount = results?.filter((r) => r.status === "sent").length ?? 0;
   const failedCount = results?.filter((r) => r.status === "failed").length ?? 0;
   const recipientCount = recipients.split(/[\n,]+/).filter((e) => e.trim()).length;
+
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 3000);
     return () => clearTimeout(t);
   }, [toast]);
+  
   const handleSend = async () => {
     setResults(null);
     const recipientList = recipients.split(/[\n,]+/).map((e) => e.trim()).filter(Boolean);
