@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Mail, Send, Users, Upload, Menu, X, ChevronDown } from "lucide-react";
+import { Mail, Send, Users, Upload, Menu, X, ChevronDown, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
@@ -22,6 +22,11 @@ const navItems = [
     label: "Recipients",
     href: "/dashboard/import-clients",
     icon: <Users className="w-4 h-4" />,
+  },
+  {
+    label: "Manage Users",
+    href: "/dashboard/admin/users",
+    icon: <User className="w-4 h-4" />,
   },
 ];
 
