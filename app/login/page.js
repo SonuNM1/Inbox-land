@@ -43,7 +43,11 @@ const LoginPage = () => {
     });
 
     if (result?.error) {
-      setError("Invalid username or password");
+      setError(
+        result.error === "CredentialsSignin"
+          ? "Invalid username or password."
+          : result.error,
+      );
       setLoading(false);
       return;
     }
@@ -56,7 +60,6 @@ const LoginPage = () => {
       {/* Left Panel */}
 
       <div className="hidden lg:flex lg:w-1/2 bg-primary flex-col justify-between p-12 relative overflow-hidden">
-      
         {/* Subtle grid pattern */}
 
         <div
@@ -183,7 +186,7 @@ const LoginPage = () => {
               <button
                 onClick={handleSignIn}
                 disabled={loading}
-                className="w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 mt-2"
+                className="w-full h-10 rounded-lg cursor-pointer bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 mt-2"
               >
                 {loading ? (
                   <div className="w-4 h-4 border-2 cursor-pointer border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />

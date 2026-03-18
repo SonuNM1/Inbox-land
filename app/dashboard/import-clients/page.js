@@ -18,13 +18,13 @@ import {
 const PAGE_SIZE = 10;
 
 export default function ImportClients() {
+  
   const [clients, setClients] = useState([]);
   const [filter, setFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [addName, setAddName] = useState("");
   const [addEmail, setAddEmail] = useState("");
   const [addLoading, setAddLoading] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -56,10 +56,18 @@ export default function ImportClients() {
   };
 
   const handleDelete = async (id) => {
+
+    console.log("Deleting ID:", id);
+
     try {
-      await fetch(`/api/clients/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/clients/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        showToast(data.error || "Failed to delete.", "error");
+        return;
+      }
       setClients((prev) => prev.filter((c) => c.id !== id));
-      showToast("Client removed.");
+      showToast("Client removed successfully.", "success");
     } catch {
       showToast("Failed to delete.", "error");
     }
@@ -75,14 +83,13 @@ export default function ImportClients() {
       const res = await fetch("/api/clients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: addName, email: addEmail }),
+        body: JSON.stringify({ email: addEmail }),
       });
       const data = await res.json();
       if (data.error) {
         showToast(data.error, "error");
       } else {
         setClients((prev) => [data.client, ...prev]);
-        setAddName("");
         setAddEmail("");
         setShowAddModal(false);
         showToast("Client added.");
@@ -103,10 +110,10 @@ export default function ImportClients() {
       const wb = XLSX.read(buffer, { type: "array" });
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws);
+
       const clientList = rows
         .map((r) => ({
           email: r.email || r.Email || "",
-          name: r.name || r.Name || "",
         }))
         .filter((r) => r.email);
       if (!clientList.length) {
@@ -156,6 +163,7 @@ export default function ImportClients() {
       )}
 
       {/* Add modal */}
+
       {showAddModal && (
         <>
           <div
@@ -176,18 +184,6 @@ export default function ImportClients() {
                 </button>
               </div>
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1.5">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    value={addName}
-                    onChange={(e) => setAddName(e.target.value)}
-                    placeholder="Client name"
-                    className="w-full h-10 px-3 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow"
-                  />
-                </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1.5">
                     Email <span className="text-destructive">*</span>
@@ -296,18 +292,16 @@ export default function ImportClients() {
       </div>
 
       {/* Table — desktop */}
+
       <div className="hidden md:block rounded-xl border border-input overflow-hidden">
         <div className="grid grid-cols-12 px-4 py-2.5 bg-muted/40 border-b border-input">
           <span className="col-span-1 text-xs font-medium text-muted-foreground">
             #
           </span>
-          <span className="col-span-4 text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-            <User className="w-3 h-3" /> Name
-          </span>
-          <span className="col-span-4 text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+          <span className="col-span-7 text-xs font-medium text-muted-foreground flex items-center gap-1.5">
             <Mail className="w-3 h-3" /> Email
           </span>
-          <span className="col-span-2 text-xs font-medium text-muted-foreground">
+          <span className="col-span-3 text-xs font-medium text-muted-foreground">
             Status
           </span>
           <span className="col-span-1 text-xs font-medium text-muted-foreground"></span>
@@ -330,15 +324,10 @@ export default function ImportClients() {
               <span className="col-span-1 text-muted-foreground text-xs">
                 {(page - 1) * PAGE_SIZE + i + 1}
               </span>
-              <span className="col-span-4 text-foreground text-sm truncate pr-2">
-                {client.name || (
-                  <span className="text-muted-foreground">—</span>
-                )}
-              </span>
-              <span className="col-span-4 text-foreground text-sm font-mono truncate pr-2">
+              <span className="col-span-7 text-foreground text-sm font-mono truncate pr-2">
                 {client.email}
               </span>
-              <span className="col-span-2">
+              <span className="col-span-3">
                 {client.mailed ? (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-medium">
                     <CheckCircle className="w-3 h-3" /> Mailed
@@ -379,11 +368,6 @@ export default function ImportClients() {
               className="rounded-xl border border-input bg-background p-4 flex items-start justify-between gap-3"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-foreground text-sm font-medium truncate">
-                  {client.name || (
-                    <span className="text-muted-foreground">No name</span>
-                  )}
-                </p>
                 <p className="text-muted-foreground text-xs font-mono truncate mt-0.5">
                   {client.email}
                 </p>

@@ -55,7 +55,7 @@ export default function ProfilePage() {
       <div className="border-t pt-6">
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex items-center gap-2 px-4 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-colors"
+          className="flex items-center cursor-pointer gap-2 px-4 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-colors"
         >
           <LogOut size={16} />
           Logout

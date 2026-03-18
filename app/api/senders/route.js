@@ -2,7 +2,7 @@ import pool from "@/lib/db.js";
 
 export async function GET() {
   const { rows } = await pool.query(
-    "SELECT id, email, app_password, mails_sent, created_at FROM sender_accounts ORDER BY created_at DESC"
+    "SELECT id, email, app_password, mails_sent, last_used_at FROM sender_accounts ORDER BY created_at DESC"
   );
   return Response.json({ senders: rows });
 }

@@ -1,9 +1,18 @@
+import pool from "@/lib/db.js";
 import nodemailer from "nodemailer";
 
 export async function POST(req) {
-  const { senderEmail, appPassword, recipients, subject, body } = await req.json();
+  const { senderName, senderEmail, appPassword, recipients, subject, body } =
+    await req.json();
 
-  if (!senderEmail || !appPassword || !recipients?.length || !subject || !body) {
+  if (
+    !senderName ||
+    !senderEmail ||
+    !appPassword ||
+    !recipients?.length ||
+    !subject ||
+    !body
+  ) {
     return Response.json({ error: "Missing required fields" }, { status: 400 });
   }
 
@@ -11,34 +20,39 @@ export async function POST(req) {
     host: "smtp.gmail.com",
     port: 587,
     secure: false,
-    auth: {
-      user: senderEmail,
-      pass: appPassword,
-    },
+    auth: { user: senderEmail, pass: appPassword },
   });
 
   const results = [];
-
   for (const email of recipients) {
     try {
       await transporter.sendMail({
-        from: senderEmail,
+        from: `"${senderName}" <${senderEmail}>`,
         to: email,
         subject,
         text: body,
       });
 
-      results.push({ email, status: "sent" });
+      // Mark as mailed in DB
 
-    } catch (err) {
-
-      results.push({
+      await pool.query("UPDATE clients SET mailed = TRUE WHERE email = $1", [
         email,
-        status: "failed",
-        error: err.message,
-      });
+      ]);
 
+      results.push({ email, status: "sent" });
+    } catch (err) {
+      results.push({ email, status: "failed", error: err.message });
     }
+  }
+
+  // Stamp last_used_at only if at least one email was sent
+
+  const sentCount = results.filter((r) => r.status === "sent").length;
+  if (sentCount > 0) {
+    await pool.query(
+      "UPDATE sender_accounts SET last_used_at = NOW(), mails_sent = mails_sent + $1 WHERE email = $2",
+      [sentCount, senderEmail],
+    );
   }
 
   return Response.json({ results });
