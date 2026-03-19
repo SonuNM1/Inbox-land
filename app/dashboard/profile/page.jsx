@@ -3,10 +3,12 @@
 import { useSession, signOut } from "next-auth/react";
 import { toast } from "sonner";
 import { LogOut, KeyRound } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
   const { data: session } = useSession();
 
+  const router = useRouter();
   const username = session?.user?.name || "";
 
   return (
@@ -52,7 +54,14 @@ export default function ProfilePage() {
       </div>
 
       {/* Divider */}
-      <div className="border-t pt-6">
+
+      <div className="border-t pt-6 flex items-center gap-3">
+        <button
+          onClick={() => router.push("/dashboard/mass-mail")}
+          className="flex items-center cursor-pointer gap-2 px-4 py-2 rounded-md border border-input hover:bg-muted/40 text-foreground font-semibold text-sm transition-colors"
+        >
+          ← Back
+        </button>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           className="flex items-center cursor-pointer gap-2 px-4 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition-colors"

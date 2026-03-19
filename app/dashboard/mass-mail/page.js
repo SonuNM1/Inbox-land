@@ -1,15 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
-import {
-  Send,
-  CheckCircle,
-  XCircle,
-  Loader2,
-  Users,
-  Upload,
-  EyeOff,
-  Eye,
-} from "lucide-react";
+import { useState } from "react";
+import { Send, CheckCircle, XCircle, Loader2, EyeOff, Eye } from "lucide-react";
 import { toast } from "sonner";
 
 export default function MassMail() {
@@ -21,38 +12,13 @@ export default function MassMail() {
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
-  const [loadingPending, setLoadingPending] = useState(false);
-  const [loadingSender, setLoadingSender] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const sentCount = results?.filter((r) => r.status === "sent").length ?? 0;
   const failedCount = results?.filter((r) => r.status === "failed").length ?? 0;
-
   const recipientCount = recipients
     .split(/[\n,]+/)
     .filter((e) => e.trim()).length;
-
-  const fetchPendingClients = async () => {
-    setLoadingPending(true);
-    try {
-      const res = await fetch("/api/clients");
-      const data = await res.json();
-      const pending = (data.clients ?? [])
-        .filter((c) => !c.mailed)
-        .slice(0, 25)
-        .map((c) => c.email);
-      setRecipients(pending.join("\n"));
-      if (pending.length === 0) {
-        toast.error("No pending clients found.");
-      } else {
-        toast.success(`${pending.length} pending clients loaded.`);
-      }
-    } catch {
-      toast.error("Failed to fetch clients.");
-    } finally {
-      setLoadingPending(false);
-    }
-  };
 
   const handleSend = async () => {
     setResults(null);
@@ -60,6 +26,7 @@ export default function MassMail() {
       .split(/[\n,]+/)
       .map((e) => e.trim())
       .filter(Boolean);
+
     if (
       !senderEmail ||
       !appPassword ||
@@ -70,6 +37,7 @@ export default function MassMail() {
       toast.error("Please fill in all fields.");
       return;
     }
+
     setLoading(true);
     try {
       const res = await fetch("/api/send-emails", {
@@ -84,7 +52,6 @@ export default function MassMail() {
           body,
         }),
       });
-
       const data = await res.json();
       if (data.error) {
         toast.error(data.error);
@@ -96,15 +63,11 @@ export default function MassMail() {
         setRecipients("");
         setSubject("");
         setBody("");
-
         const sent = data.results.filter((r) => r.status === "sent").length;
         const failed = data.results.filter((r) => r.status === "failed").length;
-
-        if (failed === 0) {
-          toast.success(`${sent} emails sent successfully.`);
-        } else {
-          toast.error(`${sent} sent, ${failed} failed.`);
-        }
+        failed === 0
+          ? toast.success(`${sent} emails sent successfully.`)
+          : toast.error(`${sent} sent, ${failed} failed.`);
       }
     } catch {
       toast.error("Something went wrong. Please try again.");
@@ -113,31 +76,9 @@ export default function MassMail() {
     }
   };
 
-  const fetchNextSender = async () => {
-    setLoadingSender(true);
-    try {
-      const res = await fetch("/api/senders/next");
-      const data = await res.json();
-      if (data.error) {
-        toast.error(data.error);
-        return;
-      }
-      setSenderEmail(data.sender.email);
-      setAppPassword(data.sender.app_password);
-      toast.success(`Sender loaded: ${data.sender.email}`);
-    } catch {
-      toast.error("Failed to fetch sender.");
-    } finally {
-      setLoadingSender(false);
-    }
-  };
-
   return (
-    <div className="p-6 lg:p-10 ml-40 mt-20 lg:mt-20 lg:ml-40 laptop:mt-2 laptop:ml-32 laptop:p-6">
-      <div className="max-w-2xl">
-        <div className="mb-8 lg:mb-8 xl:mb-8 [@media(min-width:1024px)_and_(max-width:1279px)]:mb-1">
-          <p className="text-muted-foreground text-sm"></p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center p-6 lg:p-4">
+      <div className="w-full max-w-2xl space-y-5 lg:space-y-3">
         {results ? (
           <div className="space-y-4">
             <div className="flex items-center gap-3">
@@ -182,11 +123,10 @@ export default function MassMail() {
             </div>
           </div>
         ) : (
-          <div className="space-y-5 [@media(min-width:1024px)_and_(max-width:1279px)]:space-y-2">
-            {/* Row 1 — Your Name full width */}
-
+          <div className="space-y-5 lg:space-y-2">
+            {/* Your Name */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">
+              <label className="block text-sm font-medium text-foreground mb-1.5 lg:mb-1">
                 Your Name
               </label>
               <input
@@ -194,115 +134,76 @@ export default function MassMail() {
                 value={senderName}
                 onChange={(e) => setSenderName(e.target.value)}
                 placeholder="John Carter"
-                className="w-full h-10 [@media(min-width:1024px)_and_(max-width:1279px)]:h-8 px-3 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow"
+                className="w-full h-10 lg:h-8 px-3 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow"
               />
             </div>
 
-            {/* Row 2 — Gmail + App Password side by side */}
+            {/* Gmail + App Password */}
 
-            {/* Row 2 — Gmail + App Password side by side */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-sm font-medium text-foreground">
-                  
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5 lg:mb-1">
+                  Sender Gmail
                 </label>
-                <button
-                  type="button"
-                  onClick={fetchNextSender}
-                  disabled={loadingSender}
-                  className="flex items-center gap-1.5 text-xs font-medium px-3 h-7 rounded-lg bg-[#0D1F17] text-white hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-60"
-                >
-                  {loadingSender ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <Upload className="w-3 h-3" />
-                  )}
-                  {loadingSender ? "Loading..." : "Import Sender"}
-                </button>
+                <input
+                  type="email"
+                  value={senderEmail}
+                  onChange={(e) => setSenderEmail(e.target.value)}
+                  placeholder="you@gmail.com"
+                  className="w-full h-10 lg:h-8 px-3 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow"
+                />
               </div>
-              <div className="grid grid-cols-2 gap-4 [@media(min-width:1024px)_and_(max-width:1279px)]:gap-2.5">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1.5">
-                    Sender Gmail
-                  </label>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5 lg:mb-1">
+                  App Password
+                </label>
+                <div className="relative">
                   <input
-                    type="email"
-                    value={senderEmail}
-                    onChange={(e) => setSenderEmail(e.target.value)}
-                    placeholder="you@gmail.com"
-                    className="w-full h-10 [@media(min-width:1024px)_and_(max-width:1279px)]:h-8 px-3 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow"
+                    type={showPassword ? "text" : "password"}
+                    value={appPassword}
+                    onChange={(e) => setAppPassword(e.target.value)}
+                    placeholder="Gmail app password"
+                    className="w-full h-10 lg:h-8 px-3 pr-10 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1.5">
-                    App Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={appPassword}
-                      onChange={(e) => setAppPassword(e.target.value)}
-                      placeholder="Gmail app password"
-                      className="w-full h-10 [@media(min-width:1024px)_and_(max-width:1279px)]:h-8 px-3 pr-10 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((p) => !p)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((p) => !p)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
-            <div>
-              <div className="flex items-center justify-between mb-1.5 [@media(min-width:1024px)_and_(max-width:1279px)]:mb-1">
-                <label className="block text-sm font-medium text-foreground">
-                  Recipients
-                  {recipientCount > 0 && (
-                    <span className="ml-2 text-xs font-normal text-muted-foreground">
-                      {recipientCount} emails
-                    </span>
-                  )}
-                </label>
-                <button
-                  type="button"
-                  onClick={fetchPendingClients}
-                  disabled={loadingPending}
-                  className="flex items-center gap-1.5 text-xs font-medium px-3 h-7 rounded-lg bg-[#0D1F17] text-white hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-60"
-                >
-                  {loadingPending ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <Users className="w-3 h-3" />
-                  )}
-                  {loadingPending ? "Loading..." : "Load Pending"}
-                  {!loadingPending && (
-                    <span className="bg-white/20 text-white rounded px-1 py-0.5 text-[10px] font-semibold leading-none">
-                      max 25
-                    </span>
-                  )}
-                </button>
-              </div>
 
+            {/* Recipients */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5 lg:mb-1">
+                Recipients
+                {recipientCount > 0 && (
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">
+                    {recipientCount} emails
+                  </span>
+                )}
+              </label>
               <textarea
                 value={recipients}
                 onChange={(e) => setRecipients(e.target.value)}
                 placeholder={
-                  "client1@gmail.com\nclient2@gmail.com\nclient3@gmail.com"
+                  "put client's mail here"
                 }
-                rows={4}
-                className="w-full px-3 py-2.5 [@media(min-width:1024px)_and_(max-width:1279px)]:py-1.5 [@media(min-width:1024px)_and_(max-width:1279px)]:rows-3 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow resize-none font-mono [&]:[@media(min-width:1024px)_and_(max-width:1279px)]:[rows='3']"
-                style={{ "--laptop-rows": 3 }}
+                rows={3}
+                className="w-full px-3 py-2.5 lg:py-1.5 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow resize-none font-mono"
               />
             </div>
+
+            {/* Subject */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5 [@media(min-width:1024px)_and_(max-width:1279px)]:mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1.5 lg:mb-1">
                 Subject
               </label>
               <input
@@ -310,26 +211,30 @@ export default function MassMail() {
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="Your subject line"
-                className="w-full h-10 [@media(min-width:1024px)_and_(max-width:1279px)]:h-8 px-3 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow"
+                className="w-full h-10 lg:h-8 px-3 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow"
               />
             </div>
+
+            {/* Message */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5 [@media(min-width:1024px)_and_(max-width:1279px)]:mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1.5 lg:mb-1">
                 Message
               </label>
               <textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder="Write your message here..."
-                rows={7}
-                className="w-full px-3 py-2.5 [@media(min-width:1024px)_and_(max-width:1279px)]:py-1.5 [@media(min-width:1024px)_and_(max-width:1279px)]:text-xs rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow resize-none"
-                style={{ height: undefined }}
+                rows={5}
+                className="w-full px-3 py-2.5 lg:py-1.5 rounded-lg border border-input bg-background text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-shadow resize-none"
               />
             </div>
+
+            {/* Send Button */}
+
             <button
               onClick={handleSend}
               disabled={loading}
-              className="w-full h-10 [@media(min-width:1024px)_and_(max-width:1279px)]:h-8 rounded-lg bg-primary cursor-pointer text-primary-foreground text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="w-full h-10 lg:h-8 rounded-lg bg-primary cursor-pointer text-primary-foreground text-sm font-medium flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {loading ? (
                 <>
